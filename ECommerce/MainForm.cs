@@ -18,7 +18,7 @@ namespace ECommerceApp
             { "Address",       new[] { "Address_ID","User_ID","House_Number","Street","City","Country","Postal_Code" } },
             { "Category",      new[] { "Category_ID","Name","Description" } },
             { "Product",       new[] { "Product_ID","Category_ID","Name","Description","Price","Stock_Quantity" } },
-            { "Order",         new[] { "Order_ID","User_ID","Status","Order_Date","Total_Amount" } },
+            { "Order",         new[] { "Order_ID","User_ID","Status","Order_Date"} },
             { "Order_Product", new[] { "Order_ID","Product_ID","Quantity" } },
             { "Shipping",      new[] { "Tracking_Number","Order_ID","Shipment_Date","Delivery_Date","Shipping_Status" } },
             { "Payment",       new[] { "Payment_ID","Order_ID","Payment_Date","Payment_Method","Payment_Amount","Payment_Status" } }
