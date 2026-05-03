@@ -41,6 +41,7 @@ namespace ECommerceApp
             { "Delivery_Date", ColType.DateTime }, { "Payment_Date", ColType.DateTime }
         };
 
+        private string currentTable;
         private string[]  currentColumns;
         private TextBox[] currentTextBoxes;
 
@@ -68,13 +69,18 @@ namespace ECommerceApp
         private void BuildFieldsFor(string table)
         {
             pnlFields.Controls.Clear();
-            currentColumns   = TableColumns[table];
+            currentTable = table;
+            currentColumns = TableColumns[table];
             currentTextBoxes = new TextBox[currentColumns.Length];
             int y = 10;
             for (int i = 0; i < currentColumns.Length; i++)
             {
                 Label lbl = new Label  { Text = currentColumns[i] + ":", Top = y, Left = 10, Width = 130, AutoSize = false };
                 TextBox tb = new TextBox { Top = y, Left = 150, Width = 280, Name = "tx_" + currentColumns[i] };
+                if(i == 0 && table != "Order_Product")
+                {
+                    tb.ReadOnly = true;
+                }
                 pnlFields.Controls.Add(lbl);
                 pnlFields.Controls.Add(tb);
                 currentTextBoxes[i] = tb;
@@ -88,48 +94,7 @@ namespace ECommerceApp
             if (cmbTable.SelectedIndex == -1) return;
             string table = cmbTable.SelectedItem.ToString();
 
-            // 1- Instantiate the SqlConnection
-            SqlConnection con = new SqlConnection(DBHelper.ConnectionString);
-
-            // 2- Open the connection.
-            con.Open();
-
-            // 3- Instantiate a new command with a query and connection as parameters
-            SqlCommand cmd = new SqlCommand("SELECT * FROM [" + table + "]", con);
-            cmd.CommandType = CommandType.Text;
-
-            // 4- Call Execute reader to get query results
-            SqlDataReader reader = cmd.ExecuteReader();
-
-            // To use the values from reader, we create DataTable
-            DataTable tbl = new DataTable();
-
-            // Add columns to the table, according to the columns in the reader
-            for (int i = 0; i < reader.FieldCount; i++)
-                tbl.Columns.Add(reader.GetName(i), reader.GetFieldType(i));
-
-            // To add a row to the table we use DataRow object
-            DataRow row;
-            try
-            {
-                while (reader.Read())
-                {
-                    // To ensure that the row has the same columns in the table, we use NewRow()
-                    row = tbl.NewRow();
-                    for (int i = 0; i < reader.FieldCount; i++)
-                        row[reader.GetName(i)] = reader[i];
-                    // Finally we add the row to the table
-                    tbl.Rows.Add(row);
-                }
-            }
-            finally
-            {
-                // 5- Close the reader and the connection
-                reader.Close();
-                con.Close();
-            }
-
-            dgvData.DataSource = tbl;
+            dgvData.DataSource = DBHelper.ExecuteQuery("SELECT * FROM [" + table + "]");
         }
 
         // Click a grid row -> fill the textboxes
@@ -155,36 +120,22 @@ namespace ECommerceApp
             SqlParameter[] parameters = BuildAllParameters();
             if (parameters == null) return;
 
+            string[] insertableColumns = currentColumns;
+            if (table != "Order_Product") insertableColumns = insertableColumns.Skip(1).ToArray();
+
             // 3- Prepare command string
-            string cols       = string.Join(",", currentColumns.Select(c => "[" + c + "]"));
-            string pars       = string.Join(",", currentColumns.Select(c => "@" + c));
+            string cols       = string.Join(",", insertableColumns.Select(c => "[" + c + "]"));
+            string pars       = string.Join(",", insertableColumns.Select(c => "@" + c));
             string insertString = "INSERT INTO [" + table + "] (" + cols + ") VALUES (" + pars + ")";
 
-            // 1- Instantiate the SqlConnection
-            SqlConnection con = new SqlConnection(DBHelper.ConnectionString);
             try
             {
-                // 2- Open the connection.
-                con.Open();
-
-                // 4- Instantiate a new command with a query and connection as parameters
-                SqlCommand cmd = new SqlCommand(insertString, con);
-
-                // 5- Set Parameters
-                cmd.Parameters.AddRange(parameters);
-
-                // 6- Call ExecuteNonQuery to execute insert stmt at server.
-                cmd.ExecuteNonQuery();
+                DBHelper.ExecuteNonQuery(insertString, parameters);
 
                 MessageBox.Show("Saved successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 btnView_Click(sender, e);
             }
             catch (SqlException ex) { ShowSqlError("Insert", ex, table); }
-            finally
-            {
-                // 7- Close Connection
-                con.Close();
-            }
         }
 
         
@@ -209,24 +160,11 @@ namespace ECommerceApp
             if (string.IsNullOrEmpty(setClause))
             { MessageBox.Show("Nothing to update on this table.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
 
-            // 3- Prepare command string
             string updateString = "UPDATE [" + table + "] SET " + setClause + " WHERE " + whereClause;
 
-            // 1- Instantiate the SqlConnection
-            SqlConnection con = new SqlConnection(DBHelper.ConnectionString);
             try
             {
-                // 2- Open the connection.
-                con.Open();
-
-                // 1. Instantiate a new command with command text and connection
-                SqlCommand cmd = new SqlCommand(updateString, con);
-
-                // 2. Set the Connection property + parameters
-                cmd.Parameters.AddRange(parameters);
-
-                // 3. Call ExecuteNonQuery to send command
-                int rows = cmd.ExecuteNonQuery();
+                int rows = DBHelper.ExecuteNonQuery(updateString, parameters);
 
                 if (rows > 0)
                 { MessageBox.Show("Updated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information); btnView_Click(sender, e); }
@@ -234,7 +172,6 @@ namespace ECommerceApp
                   MessageBox.Show("No row matched that ID.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (SqlException ex) { ShowSqlError("Update", ex, table); }
-            finally { con.Close(); }
         }
 
        
@@ -267,26 +204,10 @@ namespace ECommerceApp
                 deleteString = "DELETE FROM [" + table + "] WHERE [" + currentColumns[0] + "]=@id";
                 parameters = new[] { new SqlParameter("@id", currentTextBoxes[0].Text) };
             }
-
-            // 1- Instantiate the SqlConnection
-            SqlConnection con = new SqlConnection(DBHelper.ConnectionString);
+            
             try
             {
-                // 2- Open the connection.
-                con.Open();
-
-                // 1. Instantiate a new command
-                SqlCommand cmd = new SqlCommand();
-
-                // 2. Set the CommandText property
-                cmd.CommandText = deleteString;
-
-                // 3. Set the Connection property
-                cmd.Connection = con;
-                cmd.Parameters.AddRange(parameters);
-
-                // 4. Call ExecuteNonQuery to send command
-                int rows = cmd.ExecuteNonQuery();
+                int rows = DBHelper.ExecuteNonQuery(deleteString,parameters);
 
                 if (rows > 0)
                 { MessageBox.Show("Deleted successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information); btnView_Click(sender, e); }
@@ -294,7 +215,6 @@ namespace ECommerceApp
                   MessageBox.Show("No matching row was found.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (SqlException ex) { ShowSqlError("Delete", ex, table); }
-            finally { con.Close(); }
         }
 
         
@@ -303,46 +223,7 @@ namespace ECommerceApp
             if (LoginForm.LoggedInRole != "Admin")
             { MessageBox.Show("Access denied. Admins only.", "Sales Report", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
 
-            // 1- Instantiate the SqlConnection
-            SqlConnection con = new SqlConnection(DBHelper.ConnectionString);
-
-            // 2- Open the connection.
-            con.Open();
-
-            // 1. create a command object identifying the stored procedure
-            SqlCommand cmd = new SqlCommand("sp_SalesReport", con);
-
-            // 2. set the command object so it knows to execute a stored procedure
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            // 3. add parameter to command, which will be passed to the stored procedure
-            
-
-            // 4. then you can execute the sp
-            SqlDataReader reader = cmd.ExecuteReader();
-
-            DataTable tbl = new DataTable();
-            for (int i = 0; i < reader.FieldCount; i++)
-                tbl.Columns.Add(reader.GetName(i), reader.GetFieldType(i));
-            DataRow row;
-            try
-            {
-                while (reader.Read())
-                {
-                    row = tbl.NewRow();
-                    for (int i = 0; i < reader.FieldCount; i++)
-                        row[reader.GetName(i)] = reader[i];
-                    tbl.Rows.Add(row);
-                }
-            }
-            finally
-            {
-                // 5- Close the reader and the connection
-                reader.Close();
-                con.Close();
-            }
-
-            dgvData.DataSource = tbl;
+            dgvData.DataSource = DBHelper.ExecuteStoredProcedure("SalesReport");
         }
 
         private void btnPlaceOrder_Click(object sender, EventArgs e)

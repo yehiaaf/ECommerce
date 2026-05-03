@@ -3,8 +3,6 @@ namespace ECommerceApp
     partial class SignupForm
     {
         private System.ComponentModel.IContainer components = null;
-        private System.Windows.Forms.Label lblUserId;
-        private System.Windows.Forms.TextBox txtUserId;
         private System.Windows.Forms.Label lblFirstName;
         private System.Windows.Forms.TextBox txtFirstName;
         private System.Windows.Forms.Label lblMiddleName;
@@ -29,8 +27,6 @@ namespace ECommerceApp
 
         private void InitializeComponent()
         {
-            this.lblUserId = new System.Windows.Forms.Label();
-            this.txtUserId = new System.Windows.Forms.TextBox();
             this.lblFirstName = new System.Windows.Forms.Label();
             this.txtFirstName = new System.Windows.Forms.TextBox();
             this.lblMiddleName = new System.Windows.Forms.Label();
@@ -49,10 +45,6 @@ namespace ECommerceApp
             this.SuspendLayout();
 
             int leftLabel = 60, leftBox = 200, boxW = 220, y = 30, step = 38;
-
-            this.lblUserId.AutoSize = true; this.lblUserId.Location = new System.Drawing.Point(leftLabel, y + 4); this.lblUserId.Text = "User ID:";
-            this.txtUserId.Location = new System.Drawing.Point(leftBox, y); this.txtUserId.Name = "txtUserId"; this.txtUserId.Size = new System.Drawing.Size(boxW, 23);
-            y += step;
 
             this.lblFirstName.AutoSize = true; this.lblFirstName.Location = new System.Drawing.Point(leftLabel, y + 4); this.lblFirstName.Text = "First Name:";
             this.txtFirstName.Location = new System.Drawing.Point(leftBox, y); this.txtFirstName.Name = "txtFirstName"; this.txtFirstName.Size = new System.Drawing.Size(boxW, 23);
@@ -100,7 +92,6 @@ namespace ECommerceApp
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(220, 230, 245);
             this.ClientSize = new System.Drawing.Size(520, y + 90);
-            this.Controls.Add(this.lblUserId);     this.Controls.Add(this.txtUserId);
             this.Controls.Add(this.lblFirstName);  this.Controls.Add(this.txtFirstName);
             this.Controls.Add(this.lblMiddleName); this.Controls.Add(this.txtMiddleName);
             this.Controls.Add(this.lblLastName);   this.Controls.Add(this.txtLastName);

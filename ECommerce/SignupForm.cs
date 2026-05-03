@@ -17,8 +17,7 @@ namespace ECommerceApp
         private void btnSignup_Click(object sender, EventArgs e)
         {
             // ---------- 1) Validation (matches every CHECK constraint in SQL) ----------
-            if (string.IsNullOrWhiteSpace(txtUserId.Text)
-             || string.IsNullOrWhiteSpace(txtFirstName.Text)
+            if (string.IsNullOrWhiteSpace(txtFirstName.Text)
              || string.IsNullOrWhiteSpace(txtLastName.Text)
              || string.IsNullOrWhiteSpace(txtUsername.Text)
              || string.IsNullOrWhiteSpace(txtPassword.Text)
@@ -27,14 +26,6 @@ namespace ECommerceApp
             {
                 MessageBox.Show("All fields are required (Middle Name is optional).",
                     "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            int userId;
-            if (!int.TryParse(txtUserId.Text, out userId))
-            {
-                MessageBox.Show("User ID must be a number.", "Validation",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -59,40 +50,28 @@ namespace ECommerceApp
                 return;
             }
 
-           
-            SqlConnection con = new SqlConnection(DBHelper.ConnectionString);
+            string insertString =
+                @"INSERT INTO [User]
+                    (First_Name, Middle_Name, Last_Name,
+                        Username, [Password], Email, Phone_Number, [Role])
+                    VALUES
+                    (@fn, @mn, @ln, @un, @pw, @em, @ph, 'Customer')";
+            SqlParameter[] sqlparams = new SqlParameter[]
+            {
+                new SqlParameter("@fn", txtFirstName.Text.Trim()),
+                new SqlParameter("@mn", string.IsNullOrWhiteSpace(txtMiddleName.Text) ? (object)DBNull.Value
+                                                                  : txtMiddleName.Text.Trim()),
+                new SqlParameter("@ln", txtLastName.Text.Trim()),
+                new SqlParameter("@un", txtUsername.Text.Trim()),
+                new SqlParameter("@pw", txtPassword.Text),
+                new SqlParameter("@em", txtEmail.Text.Trim()),
+                new SqlParameter("@ph", txtPhone.Text.Trim())
+            };
             try
             {
-                // 2- Open the connection.
-                con.Open();
+                DBHelper.ExecuteNonQuery(insertString, sqlparams);
 
-                // 3- Prepare command string
-                string insertString =
-                    @"INSERT INTO [User]
-                        (User_ID, First_Name, Middle_Name, Last_Name,
-                         Username, [Password], Email, Phone_Number, [Role])
-                      VALUES
-                        (@id, @fn, @mn, @ln, @un, @pw, @em, @ph, 'Customer')";
-
-                // 4- Instantiate a new command with a query and connection as parameters
-                SqlCommand cmd = new SqlCommand(insertString, con);
-
-                // 5- Set Parameters
-                cmd.Parameters.Add(new SqlParameter("@id", userId));
-                cmd.Parameters.Add(new SqlParameter("@fn", txtFirstName.Text.Trim()));
-                cmd.Parameters.Add(new SqlParameter("@mn",
-                    string.IsNullOrWhiteSpace(txtMiddleName.Text) ? (object)DBNull.Value
-                                                                  : txtMiddleName.Text.Trim()));
-                cmd.Parameters.Add(new SqlParameter("@ln", txtLastName.Text.Trim()));
-                cmd.Parameters.Add(new SqlParameter("@un", txtUsername.Text.Trim()));
-                cmd.Parameters.Add(new SqlParameter("@pw", txtPassword.Text));
-                cmd.Parameters.Add(new SqlParameter("@em", txtEmail.Text.Trim()));
-                cmd.Parameters.Add(new SqlParameter("@ph", txtPhone.Text.Trim()));
-
-                // 6- Call ExecuteNonQuery to execute insert stmt at server.
-                cmd.ExecuteNonQuery();
-
-                MessageBox.Show("Sign-up successful! Your User ID is: " + userId,
+                MessageBox.Show("Sign-up successful!",
                     "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 this.Close();
             }
@@ -100,7 +79,7 @@ namespace ECommerceApp
             {
                 if (ex.Number == 2627 || ex.Number == 2601)
                 {
-                    MessageBox.Show("This Username or User ID already exists. Please pick another.",
+                    MessageBox.Show("This Username already exists. Please pick another.",
                         "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 else
@@ -108,11 +87,6 @@ namespace ECommerceApp
                     MessageBox.Show("Database error: " + ex.Message, "Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-            }
-            finally
-            {
-                // 7- Close Connection
-                con.Close();
             }
         }
     }

@@ -11,13 +11,13 @@ namespace ECommerceApp
     {
        
         public static readonly string ConnectionString =
-            "Data Source=(local);Initial Catalog=ECommerceDataBase;Integrated Security=SSPI";
+            "Data Source=.;Initial Catalog=jinx;Integrated Security=True;Encrypt=False";
 
         
         public static DataTable ExecuteQuery(string sql, params SqlParameter[] parameters)
         {
             // 1- Instantiate the SqlConnection
-            SqlConnection con = new SqlConnection("Data Source = DESKTOP - TKENQN1; Initial Catalog = ECommerceDataBase; Integrated Security = True; Trust Server Certificate = True");
+            SqlConnection con = new SqlConnection(ConnectionString);
 
             // 2- Open the connection.
             con.Open();

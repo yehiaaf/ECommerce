@@ -49,81 +49,51 @@ namespace ECommerceApp
                 return;
             }
 
-            // ---------- 2) Connected Mode authentication ----------
-            // 1- Instantiate the SqlConnection
-            SqlConnection con = new SqlConnection(DBHelper.ConnectionString);
-            try
+            SqlParameter[] sqlparams = new SqlParameter[] {
+                new SqlParameter("@u", txtUsername.Text.Trim()),
+                new SqlParameter("@p", txtPassword.Text)};
+            DataTable dataTable = DBHelper.ExecuteQuery("SELECT User_ID, [Role] FROM [User] WHERE Username = @u AND [Password] = @p", sqlparams);
+
+            if(dataTable.Rows.Count == 0)
             {
-                // 2- Open the connection.
-                con.Open();
-
-                // 3- Instantiate a new command with a query and connection as parameters
-                SqlCommand cmd = new SqlCommand(
-                    "SELECT User_ID, [Role] FROM [User] " +
-                    "WHERE Username = @u AND [Password] = @p", con);
-                cmd.Parameters.Add(new SqlParameter("@u", txtUsername.Text.Trim()));
-                cmd.Parameters.Add(new SqlParameter("@p", txtPassword.Text));
-
-                // 4- Call Execute reader to get query results
-                SqlDataReader rdr = cmd.ExecuteReader();
-                if (!rdr.Read())
-                {
-                    rdr.Close();
-                    MessageBox.Show("Invalid username or password.", "Login Failed",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                int userId  = (int)rdr["User_ID"];
-                string role = (string)rdr["Role"];
-                rdr.Close();
-
-                if (role != cmbRole.Text)
-                {
-                    MessageBox.Show("This account is not registered as a " + cmbRole.Text + ".",
-                        "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                
-                SqlCommand fnCmd = new SqlCommand(
-                    "SELECT dbo.fn_GetUserFullName(@id)", con);
-                fnCmd.Parameters.Add(new SqlParameter("@id", userId));
-                // 2. Call ExecuteScalar to send command (cast to string because
-                //    the return type of ExecuteScalar is type object )
-                string fullName = (string)fnCmd.ExecuteScalar();
-
-                LoggedInUserID = userId;
-                LoggedInRole   = role;
-                LoggedInName   = fullName;
-
-                MessageBox.Show("Welcome, " + fullName + "!", "Login Successful",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                
-                this.Hide();
-                if (role == "Admin")
-                {
-                    AdminDashboard dash = new AdminDashboard();
-                    dash.ShowDialog();
-                }
-                else // Customer
-                {
-                    ProductCatalog cat = new ProductCatalog();
-                    cat.ShowDialog();
-                }
-                this.Close();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Database error: " + ex.Message, "Error",
+                MessageBox.Show("Invalid username or password.", "Login Failed",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
-            finally
+
+            int userId = (int)dataTable.Rows[0]["User_ID"];
+            string role = (string)dataTable.Rows[0]["Role"];
+
+            if (role != cmbRole.Text)
             {
-                // 5- Close the connection
-                con.Close();
+                MessageBox.Show("This account is not registered as a " + cmbRole.Text + ".",
+                    "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
+
+            sqlparams = new SqlParameter[] {
+                new SqlParameter("@id", userId)};
+            string fullName = (string)DBHelper.ExecuteScalar("SELECT dbo.GetUserFullName(@id)", sqlparams);
+
+            LoggedInUserID = userId;
+            LoggedInRole = role;
+            LoggedInName = fullName;
+
+            MessageBox.Show("Welcome, " + fullName + "!", "Login Successful",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            this.Hide();
+            if (role == "Admin")
+            {
+                AdminDashboard dash = new AdminDashboard();
+                dash.ShowDialog();
+            }
+            else
+            {
+                ProductCatalog cat = new ProductCatalog();
+                cat.ShowDialog();
+            }
+            this.Close();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

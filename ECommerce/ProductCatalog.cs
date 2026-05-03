@@ -34,50 +34,9 @@ namespace ECommerceApp
         
         private void LoadProducts()
         {
-            // 1- Instantiate the SqlConnection
-            SqlConnection con = new SqlConnection(DBHelper.ConnectionString);
-
-            // 2- Open the connection.
-            con.Open();
-
-            // 3- Instantiate a new command with a query and connection as parameters
-            SqlCommand cmd = new SqlCommand(
-                "SELECT Product_ID, [Name] AS Product, Price, Stock_Quantity " +
-                "FROM Product ORDER BY Product_ID", con);
-            cmd.CommandType = CommandType.Text;
-
-            // 4- Call Execute reader to get query results
-            SqlDataReader reader = cmd.ExecuteReader();
-
-            // To use the values from reader, we create DataTable
-            DataTable tbl = new DataTable();
-
-            // Add columns to the table, according to the columns in the reader
-            for (int i = 0; i < reader.FieldCount; i++)
-                tbl.Columns.Add(reader.GetName(i), reader.GetFieldType(i));
-
-            // To add a row to the table we use DataRow object
-            DataRow row;
-            try
-            {
-                while (reader.Read())
-                {
-                    // To ensure that the row has the same columns in the table, we use NewRow()
-                    row = tbl.NewRow();
-                    for (int i = 0; i < reader.FieldCount; i++)
-                        row[reader.GetName(i)] = reader[i];
-                    // Finally we add the row to the table
-                    tbl.Rows.Add(row);
-                }
-            }
-            finally
-            {
-                // 5- Close the reader and the connection
-                reader.Close();
-                con.Close();
-            }
-
-            dgvProducts.DataSource = tbl;
+            dgvProducts.DataSource =
+                DBHelper.ExecuteQuery("SELECT Product_ID, [Name] AS Product, Price, Stock_Quantity " +
+                "FROM Product ORDER BY Product_ID");
         }
 
         
@@ -141,28 +100,7 @@ namespace ECommerceApp
             { MessageBox.Show("Your cart is empty.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
 
             
-            int newOrderId;
-
-           
-            SqlConnection conId = new SqlConnection(DBHelper.ConnectionString);
-            try
-            {
-                // 2- Open the connection.
-                conId.Open();
-
-                // 1. Instantiate a new command
-                SqlCommand cmdId = new SqlCommand("SELECT ISNULL(MAX(Order_ID),0)+1 FROM [Order]", conId);
-
-                // 2. Call ExecuteScalar to send command
-                
-                newOrderId = (int)cmdId.ExecuteScalar();
-            }
-            finally
-            {
-                // 3- Close Connection
-                conId.Close();
-            }
-
+            int newOrderId = (int)DBHelper.ExecuteScalar("SELECT ISNULL(MAX(Order_ID),0)+1 FROM [Order]");
          
 
             // 1- Instantiate the SqlConnection

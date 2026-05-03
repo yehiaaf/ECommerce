@@ -14,20 +14,14 @@ namespace ECommerceApp
         private void AdminDashboard_Load(object sender, EventArgs e)
         {
           
-            // 1- Instantiate the SqlConnection
-            SqlConnection con = new SqlConnection(DBHelper.ConnectionString);
             try
             {
-                // 2- Open the connection.
-                con.Open();
+                SqlParameter[] sqlparams = new SqlParameter[]
+                {
+                    new SqlParameter("@id", LoginForm.LoggedInUserID)
+                };
 
-                // 1. Instantiate a new command
-                SqlCommand cmd = new SqlCommand("SELECT dbo.fn_GetUserFullName(@id)", con);
-                cmd.Parameters.Add(new SqlParameter("@id", LoginForm.LoggedInUserID));
-
-                // 2. Call ExecuteScalar to send command
-                // (return type is object, so we cast — Lab 9 page 10)
-                object result = cmd.ExecuteScalar();
+                object result = DBHelper.ExecuteScalar("SELECT dbo.fn_GetUserFullName(@id)", sqlparams);
                 string fullName = (result == null) ? "Admin" : (string)result;
 
                 lblWelcome.Text = "Welcome, " + fullName + "    |    Role: Admin";
@@ -35,11 +29,6 @@ namespace ECommerceApp
             catch
             {
                 lblWelcome.Text = "Welcome, Admin";
-            }
-            finally
-            {
-                // 3- Close Connection
-                con.Close();
             }
 
             // Default date range: last 30 days
@@ -57,53 +46,13 @@ namespace ECommerceApp
                 return;
             }
 
-            // 1- Instantiate the SqlConnection
-            SqlConnection con = new SqlConnection(DBHelper.ConnectionString);
-
-            // 2- Open the connection.
-            con.Open();
-
-            // 1. create a command object identifying the stored procedure
-            SqlCommand cmd = new SqlCommand("sp_SalesReport", con);
-
-            // 2. set the command object so it knows to execute a stored procedure
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            // 3. add parameter to command, which will be passed to the stored procedure
-            cmd.Parameters.Add(new SqlParameter("@StartDate", dtpStart.Value));
-            cmd.Parameters.Add(new SqlParameter("@EndDate",   dtpEnd.Value));
-
-            // 4. then you can execute the sp
-            SqlDataReader reader = cmd.ExecuteReader();
-
-            // Build DataTable — Lab 8 GetPatients() pattern (page 18)
-            // To use the values from reader, we create DataTable
-            DataTable tbl = new DataTable();
-
-            // Add columns to the table, according to the columns in the reader
-            for (int i = 0; i < reader.FieldCount; i++)
-                tbl.Columns.Add(reader.GetName(i), reader.GetFieldType(i));
-
-            // To add a row to the table we use DataRow object
-            DataRow row;
-            try
+            SqlParameter[] sqlparams = new SqlParameter[]
             {
-                while (reader.Read())
-                {
-                    // To ensure that the row has the same columns in the table, we use NewRow()
-                    row = tbl.NewRow();
-                    for (int i = 0; i < reader.FieldCount; i++)
-                        row[reader.GetName(i)] = reader[i];
-                    // Finally we add the row to the table
-                    tbl.Rows.Add(row);
-                }
-            }
-            finally
-            {
-                // 5- Close the reader and the connection
-                reader.Close();
-                con.Close();
-            }
+                new SqlParameter("@StartDate", dtpStart.Value),
+                new SqlParameter("@EndDate",   dtpEnd.Value)
+            };
+
+            DataTable tbl = DBHelper.ExecuteStoredProcedure("SalesReport", sqlparams);
 
             dgvReport.DataSource = tbl;
 
