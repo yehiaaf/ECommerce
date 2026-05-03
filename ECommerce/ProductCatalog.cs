@@ -169,86 +169,88 @@ namespace ECommerceApp
             LoadProducts();   
         }
 
-        
+
         private void btnMyOrders_Click(object sender, EventArgs e)
         {
-            SqlParameter[] sqlparams = new SqlParameter[]
+            Form f = new Form
+                { Text = "My Orders", Width = 650, Height = 500, StartPosition = FormStartPosition.CenterParent };
+
+            FlowLayoutPanel listPanel = new FlowLayoutPanel
             {
-                new SqlParameter("@uid", LoginForm.LoggedInUserID)
-            };
-            
-            string query = @"
-                            SELECT 
-                                o.Order_ID, 
-                                o.[Status], 
-                                o.Order_Date, 
-                                ISNULL(SUM(op.quantity * p.price), 0) AS Total_Amount
-                            FROM [Order] o
-                            LEFT JOIN order_product op ON o.Order_ID = op.order_id
-                            LEFT JOIN product p ON op.product_id = p.product_id
-                            WHERE o.User_ID = @uid
-                            GROUP BY o.Order_ID, o.[Status], o.Order_Date
-                            ORDER BY o.Order_Date DESC";
-
-            DataTable tbl = DBHelper.ExecuteQuery(query, sqlparams);
-            
-            //DataTable tbl1 = DBHelper.ExecuteQuery("SELECT Order_ID, [Status], Order_Date, dbo.getTotalAmount(Order_ID) as [Total Amount] FROM [Order] WHERE User_ID = @uid ORDER BY Order_Date DESC", sqlparams);
-            
-            if (tbl.Rows.Count == 0)
-            { MessageBox.Show("You haven't placed any orders yet.", "My Orders", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-
-            Form f = new Form { Text = "My Orders", Width = 650, Height = 500, StartPosition = FormStartPosition.CenterParent };
-            
-            FlowLayoutPanel listPanel = new FlowLayoutPanel 
-            { 
-                Dock = DockStyle.Fill, 
-                AutoScroll = true, 
-                FlowDirection = FlowDirection.TopDown, 
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
                 Padding = new Padding(10)
             };
 
-            foreach (DataRow row in tbl.Rows)
-            {
-                int orderId = Convert.ToInt32(row["Order_ID"]);
-                decimal total = Convert.ToDecimal(row["Total_Amount"]);
-                string status = row["Status"].ToString();
-                string date = Convert.ToDateTime(row["Order_Date"]).ToShortDateString();
-
-                
-                Panel rowPanel = new Panel { Width = 580, Height = 60, BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(0, 0, 0, 10) };
-
-               
-                Label lblInfo = new Label 
-                { 
-                    Text = $"Order #{orderId} | Date: {date} | Status: {status} | Total: {total:C2}",
-                    Location = new Point(10, 20),
-                    AutoSize = true,
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold)
-                };
-                
-                Button btnPay = new Button 
-                { 
-                    Text = "Pay", 
-                    Size = new Size(100, 30), 
-                    Location = new Point(460, 15),
-                    BackColor = Color.LightGreen
-                };
-                
-                btnPay.Click += (s, args) => 
-                {
-                    PaymentForm payForm = new PaymentForm(orderId, total);
-                    f.Hide();
-                    payForm.ShowDialog();
-                    f.Show();
-                };
-
-                rowPanel.Controls.Add(lblInfo);
-                rowPanel.Controls.Add(btnPay);
-                listPanel.Controls.Add(rowPanel);
-            }
-
             f.Controls.Add(listPanel);
+            
+            void RefreshOrders()
+            {
+                listPanel.Controls.Clear();
+
+                SqlParameter[] sqlparams = new SqlParameter[] { new SqlParameter("@uid", LoginForm.LoggedInUserID) };
+
+                string query = @"
+            SELECT o.Order_ID, o.[Status], o.Order_Date, ISNULL(SUM(op.quantity * p.price), 0) AS Total_Amount
+            FROM [Order] o
+            LEFT JOIN order_product op ON o.Order_ID = op.order_id
+            LEFT JOIN product p ON op.product_id = p.product_id
+            WHERE o.User_ID = @uid
+            GROUP BY o.Order_ID, o.[Status], o.Order_Date
+            ORDER BY o.Order_Date DESC";
+
+                DataTable tbl = DBHelper.ExecuteQuery(query, sqlparams);
+
+                if (tbl.Rows.Count == 0)
+                {
+                    Label lblEmpty = new Label { Text = "No orders found.", AutoSize = true };
+                    listPanel.Controls.Add(lblEmpty);
+                    return;
+                }
+
+                foreach (DataRow row in tbl.Rows)
+                {
+                    int orderId = Convert.ToInt32(row["Order_ID"]);
+                    decimal total = Convert.ToDecimal(row["Total_Amount"]);
+                    string status = row["Status"].ToString();
+                    string date = Convert.ToDateTime(row["Order_Date"]).ToShortDateString();
+
+                    Panel rowPanel = new Panel
+                    {
+                        Width = 580, Height = 60, BorderStyle = BorderStyle.FixedSingle,
+                        Margin = new Padding(0, 0, 0, 10)
+                    };
+
+                    Label lblInfo = new Label
+                    {
+                        Text = $"Order #{orderId} | Date: {date} | Status: {status} | Total: {total:C2}",
+                        Location = new Point(10, 20), AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Bold)
+                    };
+
+                    if (status == "Pending")
+                    {
+                        Button btnPay = new Button
+                        {
+                            Text = "Pay", Size = new Size(100, 30), Location = new Point(460, 15),
+                            BackColor = Color.LightGreen
+                        };
+                        btnPay.Click += (s, args) =>
+                        {
+                            PaymentForm payForm = new PaymentForm(orderId, total);
+                            payForm.ShowDialog();
+                            RefreshOrders();
+                        };
+                        rowPanel.Controls.Add(btnPay);
+                    }
+
+                    rowPanel.Controls.Add(lblInfo);
+                    listPanel.Controls.Add(rowPanel);
+                }
+            }
+            RefreshOrders();
+
             f.ShowDialog();
         }
 

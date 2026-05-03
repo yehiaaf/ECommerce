@@ -28,13 +28,13 @@ namespace ECommerceApp
 
         private void LoadOrderDetails()
         {
-            // Fetch only the products that belong to THIS order
+            
             SqlParameter[] sqlparams = new SqlParameter[]
             {
                 new SqlParameter("@oid", _orderId)
             };
 
-            // Simplified query to get product name, quantity, and subtotal
+            
             string query = @"
             SELECT p.name AS [Product], op.quantity AS [Qty], p.price AS [Unit Price], 
             (op.quantity * p.price) AS [Subtotal]
@@ -48,7 +48,53 @@ namespace ECommerceApp
         
         private void button1_Click(object sender, EventArgs e)
         {
-            throw new System.NotImplementedException();
+            if (comboBox1.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a payment method before proceeding.", 
+                    "Missing Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string selectedMethod = comboBox1.SelectedItem.ToString();
+
+            try
+            {
+                SqlParameter[] p = new SqlParameter[]
+                {
+                    new SqlParameter("@oid", _orderId),
+                    new SqlParameter("@status", "Processing")
+                };
+
+                
+                string sql = "UPDATE [Order] SET [Status] = @status WHERE Order_ID = @oid";
+
+                
+                DBHelper.ExecuteNonQuery(sql, p); 
+                
+                SqlParameter[] paymentParams = new SqlParameter[]
+                {
+                    new SqlParameter("@oid", _orderId),
+                    new SqlParameter("@amount", _totalAmount),
+                    new SqlParameter("@method", selectedMethod),
+                    new SqlParameter("@status", "paid"),
+                    new SqlParameter("@date", DateTime.Now)
+                };
+                
+                string insertPaymentSql = @"
+            INSERT INTO payment (order_id, payment_amount, payment_method, payment_status, payment_date) 
+            VALUES (@oid, @amount, @method, @status, @date)";
+
+                DBHelper.ExecuteQuery(insertPaymentSql, paymentParams);
+
+                MessageBox.Show("Payment recorded and order is now processing!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("An error occurred while updating the order: " + ex.Message, 
+                    "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
