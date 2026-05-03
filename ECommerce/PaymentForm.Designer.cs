@@ -94,7 +94,7 @@ namespace ECommerceApp
             // comboBox1
             // 
             this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] { "Credit Card", "Cash", "Electronic Wallet" });
+            this.comboBox1.Items.AddRange(new object[] { "mobile_wallet", "bank_transfer", "wallet", "debit_card", "credit_card", "cash" });
             this.comboBox1.Location = new System.Drawing.Point(436, 66);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(223, 21);
