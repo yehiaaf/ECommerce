@@ -79,6 +79,7 @@ namespace ECommerceApp
                 TextBox tb = new TextBox { Top = y, Left = 150, Width = 280, Name = "tx_" + currentColumns[i] };
                 if(i == 0 && table != "Order_Product")
                 {
+                    tb.Text = "0";
                     tb.ReadOnly = true;
                 }
                 pnlFields.Controls.Add(lbl);

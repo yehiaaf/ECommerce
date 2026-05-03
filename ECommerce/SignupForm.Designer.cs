@@ -50,7 +50,7 @@ namespace ECommerceApp
             this.txtFirstName.Location = new System.Drawing.Point(leftBox, y); this.txtFirstName.Name = "txtFirstName"; this.txtFirstName.Size = new System.Drawing.Size(boxW, 23);
             y += step;
 
-            this.lblMiddleName.AutoSize = true; this.lblMiddleName.Location = new System.Drawing.Point(leftLabel, y + 4); this.lblMiddleName.Text = "Middle Name (optional):";
+            this.lblMiddleName.AutoSize = true; this.lblMiddleName.Location = new System.Drawing.Point(leftLabel, y + 4); this.lblMiddleName.Text = "Middle Name:";
             this.txtMiddleName.Location = new System.Drawing.Point(leftBox, y); this.txtMiddleName.Name = "txtMiddleName"; this.txtMiddleName.Size = new System.Drawing.Size(boxW, 23);
             y += step;
 

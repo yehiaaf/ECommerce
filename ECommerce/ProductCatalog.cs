@@ -111,7 +111,7 @@ namespace ECommerceApp
 
             try
             {
-                DBHelper.ExecuteNonQuery("sp_PlaceOrder", sqlparams);
+                DBHelper.ExecuteStoredProcedureNonQuery("placeOrder", sqlparams);
             }
             catch (SqlException ex)
             {
@@ -135,7 +135,7 @@ namespace ECommerceApp
                 };
                 try
                 {
-                    DBHelper.ExecuteStoredProcedureNonQuery("sp_AddProductToOrder", sqlparams);
+                    DBHelper.ExecuteStoredProcedureNonQuery("AddProductToOrder", sqlparams);
 
                     linesAdded++;
                 }
@@ -176,8 +176,7 @@ namespace ECommerceApp
                 new SqlParameter("@uid", LoginForm.LoggedInUserID)
             };
 
-            DataTable tbl = DBHelper.ExecuteQuery("SELECT Order_ID, [Status], Order_Date, Total_Amount " +
-                "FROM [Order] WHERE User_ID = @uid ORDER BY Order_Date DESC", sqlparams);
+            DataTable tbl = DBHelper.ExecuteQuery("SELECT Order_ID, [Status], Order_Date, dbo.getTotalAmount(Order_ID) as [Total Amount] FROM [Order] WHERE User_ID = @uid ORDER BY Order_Date DESC", sqlparams);
 
             if (tbl.Rows.Count == 0)
             { MessageBox.Show("You haven't placed any orders yet.", "My Orders", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
