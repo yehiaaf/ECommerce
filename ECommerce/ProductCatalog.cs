@@ -101,40 +101,23 @@ namespace ECommerceApp
 
             
             int newOrderId = (int)DBHelper.ExecuteScalar("SELECT ISNULL(MAX(Order_ID),0)+1 FROM [Order]");
-         
 
-            // 1- Instantiate the SqlConnection
-            SqlConnection con1 = new SqlConnection(DBHelper.ConnectionString);
+            SqlParameter[] sqlparams = new SqlParameter[]
+            {
+                new SqlParameter("@Order_ID", newOrderId),
+                new SqlParameter("@User_ID",  LoginForm.LoggedInUserID),
+                new SqlParameter("@Status",   "Pending")
+            };
+
             try
             {
-                // 2- Open the connection.
-                con1.Open();
-
-                // 1. create a command object identifying the stored procedure
-                SqlCommand cmd1 = new SqlCommand("sp_PlaceOrder", con1);
-
-                // 2. set the command object so it knows to execute a stored procedure
-                cmd1.CommandType = CommandType.StoredProcedure;
-
-                // 3. add parameter to command, which will be passed to the stored procedure
-                cmd1.Parameters.Add(new SqlParameter("@Order_ID", newOrderId));
-                cmd1.Parameters.Add(new SqlParameter("@User_ID",  LoginForm.LoggedInUserID));
-                cmd1.Parameters.Add(new SqlParameter("@Status",   "Pending"));
-
-                // 4. then you can execute the sp
-                cmd1.ExecuteNonQuery();
+                DBHelper.ExecuteNonQuery("sp_PlaceOrder", sqlparams);
             }
             catch (SqlException ex)
             {
-                // RAISERROR from the SP surfaces here as a SqlException
                 MessageBox.Show("Order creation failed:\n\n" + ex.Message,
                     "Order Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
-            }
-            finally
-            {
-                // 5- Close Connection
-                con1.Close();
             }
 
            
@@ -143,39 +126,22 @@ namespace ECommerceApp
 
             foreach (CartLine line in cart)
             {
-                // 1- Instantiate the SqlConnection
-                SqlConnection con2 = new SqlConnection(DBHelper.ConnectionString);
+
+                sqlparams = new SqlParameter[]
+                {
+                    new SqlParameter("@Order_ID", newOrderId),
+                    new SqlParameter("@Product_ID", line.ProductID),
+                    new SqlParameter("@Quantity",   line.Quantity)
+                };
                 try
                 {
-                    // 2- Open the connection.
-                    con2.Open();
-
-                    // 1. create a command object identifying the stored procedure
-                    SqlCommand cmd2 = new SqlCommand("sp_AddProductToOrder", con2);
-
-                    // 2. set the command object so it knows to execute a stored procedure
-                    cmd2.CommandType = CommandType.StoredProcedure;
-
-                    // 3. add parameter to command, which will be passed to the stored procedure
-                    cmd2.Parameters.Add(new SqlParameter("@Order_ID",   newOrderId));
-                    cmd2.Parameters.Add(new SqlParameter("@Product_ID", line.ProductID));
-                    cmd2.Parameters.Add(new SqlParameter("@Quantity",   line.Quantity));
-
-                    // 4. then you can execute the sp
-                    cmd2.ExecuteNonQuery();
+                    DBHelper.ExecuteStoredProcedureNonQuery("sp_AddProductToOrder", sqlparams);
 
                     linesAdded++;
                 }
                 catch (SqlException ex)
                 {
-                    // The SP RAISERRORs for: "Insufficient stock", "Product does
-                    // not exist", "Quantity must be greater than zero".
                     failures.Add("- " + line.ProductName + ": " + ex.Message);
-                }
-                finally
-                {
-                    // 5- Close Connection
-                    con2.Close();
                 }
             }
 
@@ -205,45 +171,13 @@ namespace ECommerceApp
         
         private void btnMyOrders_Click(object sender, EventArgs e)
         {
-            // 1- Instantiate the SqlConnection
-            SqlConnection con = new SqlConnection(DBHelper.ConnectionString);
-
-            // 2- Open the connection.
-            con.Open();
-
-            // 3- Instantiate a new command with a query and connection as parameters
-            SqlCommand cmd = new SqlCommand(
-                "SELECT Order_ID, [Status], Order_Date, Total_Amount " +
-                "FROM [Order] WHERE User_ID = @uid ORDER BY Order_Date DESC", con);
-            cmd.CommandType = CommandType.Text;
-            cmd.Parameters.Add(new SqlParameter("@uid", LoginForm.LoggedInUserID));
-
-            // 4- Call Execute reader to get query results
-            SqlDataReader reader = cmd.ExecuteReader();
-
-            // To use the values from reader, we create DataTable
-            DataTable tbl = new DataTable();
-            for (int i = 0; i < reader.FieldCount; i++)
-                tbl.Columns.Add(reader.GetName(i), reader.GetFieldType(i));
-
-            // To add a row to the table we use DataRow object
-            DataRow row;
-            try
+            SqlParameter[] sqlparams = new SqlParameter[]
             {
-                while (reader.Read())
-                {
-                    row = tbl.NewRow();
-                    for (int i = 0; i < reader.FieldCount; i++)
-                        row[reader.GetName(i)] = reader[i];
-                    tbl.Rows.Add(row);
-                }
-            }
-            finally
-            {
-                // 5- Close the reader and the connection
-                reader.Close();
-                con.Close();
-            }
+                new SqlParameter("@uid", LoginForm.LoggedInUserID)
+            };
+
+            DataTable tbl = DBHelper.ExecuteQuery("SELECT Order_ID, [Status], Order_Date, Total_Amount " +
+                "FROM [Order] WHERE User_ID = @uid ORDER BY Order_Date DESC", sqlparams);
 
             if (tbl.Rows.Count == 0)
             { MessageBox.Show("You haven't placed any orders yet.", "My Orders", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
