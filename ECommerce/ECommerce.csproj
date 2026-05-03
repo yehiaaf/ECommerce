@@ -62,6 +62,12 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MainForm.Designer.cs" />
+    <Compile Include="PaymentForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PaymentForm.Designer.cs">
+      <DependentUpon>PaymentForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="ProductCatalog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -76,6 +82,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="WelcomeForm.Designer.cs" />
+    <EmbeddedResource Include="PaymentForm.resx">
+      <DependentUpon>PaymentForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

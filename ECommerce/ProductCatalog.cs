@@ -176,8 +176,20 @@ namespace ECommerceApp
                 new SqlParameter("@uid", LoginForm.LoggedInUserID)
             };
 
-            DataTable tbl = DBHelper.ExecuteQuery("SELECT Order_ID, [Status], Order_Date, Total_Amount " +
-                "FROM [Order] WHERE User_ID = @uid ORDER BY Order_Date DESC", sqlparams);
+            string query = @"
+                            SELECT 
+                                o.Order_ID, 
+                                o.[Status], 
+                                o.Order_Date, 
+                                SUM(op.quantity * p.price) AS Total_Amount
+                            FROM [Order] o
+                            JOIN order_product op ON o.Order_ID = op.order_id
+                            JOIN product p ON op.product_id = p.product_id
+                            WHERE o.User_ID = @uid
+                            GROUP BY o.Order_ID, o.[Status], o.Order_Date
+                            ORDER BY o.Order_Date DESC";
+
+            DataTable tbl = DBHelper.ExecuteQuery(query, sqlparams);
 
             if (tbl.Rows.Count == 0)
             { MessageBox.Show("You haven't placed any orders yet.", "My Orders", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
