@@ -100,19 +100,17 @@ namespace ECommerceApp
             if (cart.Count == 0)
             { MessageBox.Show("Your cart is empty.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
 
-            
-            int newOrderId = (int)DBHelper.ExecuteScalar("SELECT ISNULL(MAX(Order_ID),0)+1 FROM [Order]");
+            int newOrderId = 0;
 
             SqlParameter[] sqlparams = new SqlParameter[]
             {
-                new SqlParameter("@Order_ID", newOrderId),
                 new SqlParameter("@User_ID",  LoginForm.LoggedInUserID),
                 new SqlParameter("@Status",   "Pending")
             };
 
             try
             {
-                DBHelper.ExecuteStoredProcedureNonQuery("placeOrder", sqlparams);
+                newOrderId = (int)DBHelper.ExecuteScalarStoredProcedure("placeOrder", sqlparams);
             }
             catch (SqlException ex)
             {
@@ -121,7 +119,6 @@ namespace ECommerceApp
                 return;
             }
 
-           
             int linesAdded = 0;
             List<string> failures = new List<string>();
 

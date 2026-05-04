@@ -47,7 +47,7 @@ namespace ECommerceApp
             this.lblTitle.AutoSize = true;
             this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
             this.lblTitle.Location = new System.Drawing.Point(220, 50);
-            this.lblTitle.Text = "Sales Report  (sp_SalesReport)";
+            this.lblTitle.Text = "Sales Report";
             //
             // lblStart
             //

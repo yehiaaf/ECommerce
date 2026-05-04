@@ -11,7 +11,7 @@ namespace ECommerceApp
     {
        
         public static readonly string ConnectionString =
-            "Data Source=.;Initial Catalog=jinx;Integrated Security=True;Encrypt=False";
+            "Data Source=.;Initial Catalog=ECommerce;Integrated Security=True;Encrypt=False";
 
         
         public static DataTable ExecuteQuery(string sql, params SqlParameter[] parameters)
@@ -150,6 +150,28 @@ namespace ECommerceApp
             {
                 SqlCommand cmd = new SqlCommand(sql, con);
                 cmd.CommandType = CommandType.Text;
+                if (parameters != null) cmd.Parameters.AddRange(parameters);
+
+                return cmd.ExecuteScalar();
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        public static object ExecuteScalarStoredProcedure(string sql, params SqlParameter[] parameters)
+        {
+            SqlConnection con = new SqlConnection(ConnectionString);
+
+            con.Open();
+
+            try
+            {
+                SqlCommand cmd = new SqlCommand(sql, con);
+
+                cmd.CommandType = CommandType.StoredProcedure;
+
                 if (parameters != null) cmd.Parameters.AddRange(parameters);
 
                 return cmd.ExecuteScalar();
