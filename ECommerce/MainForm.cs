@@ -54,7 +54,6 @@ namespace ECommerceApp
                 "User","Address","Category","Product",
                 "Order","Order_Product","Shipping","Payment"
             });
-            btnSalesReport.Enabled = (LoginForm.LoggedInRole == "Admin");
             this.Text = "E-Commerce CRUD — Logged in as " + LoginForm.LoggedInRole
                       + " (" + LoginForm.LoggedInName + ")";
         }
@@ -216,15 +215,6 @@ namespace ECommerceApp
                   MessageBox.Show("No matching row was found.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (SqlException ex) { ShowSqlError("Delete", ex, table); }
-        }
-
-        
-        private void btnSalesReport_Click(object sender, EventArgs e)
-        {
-            if (LoginForm.LoggedInRole != "Admin")
-            { MessageBox.Show("Access denied. Admins only.", "Sales Report", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-
-            dgvData.DataSource = DBHelper.ExecuteStoredProcedure("SalesReport");
         }
 
         private void btnPlaceOrder_Click(object sender, EventArgs e)

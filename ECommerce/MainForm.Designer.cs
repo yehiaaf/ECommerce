@@ -10,7 +10,6 @@ namespace ECommerceApp
         private System.Windows.Forms.Button btnDelete;
         private System.Windows.Forms.Button btnUpdate;
         private System.Windows.Forms.Button btnView;
-        private System.Windows.Forms.Button btnSalesReport;
         private System.Windows.Forms.Button btnPlaceOrder;
         private System.Windows.Forms.Button btnLogout;
         private System.Windows.Forms.DataGridView dgvData;
@@ -30,7 +29,6 @@ namespace ECommerceApp
             this.btnDelete = new System.Windows.Forms.Button();
             this.btnUpdate = new System.Windows.Forms.Button();
             this.btnView = new System.Windows.Forms.Button();
-            this.btnSalesReport = new System.Windows.Forms.Button();
             this.btnPlaceOrder = new System.Windows.Forms.Button();
             this.btnLogout = new System.Windows.Forms.Button();
             this.dgvData = new System.Windows.Forms.DataGridView();
@@ -95,15 +93,6 @@ namespace ECommerceApp
             this.btnView.UseVisualStyleBackColor = true;
             this.btnView.Click += new System.EventHandler(this.btnView_Click);
             //
-            // btnSalesReport
-            //
-            this.btnSalesReport.Location = new System.Drawing.Point(640, 250);
-            this.btnSalesReport.Name = "btnSalesReport";
-            this.btnSalesReport.Size = new System.Drawing.Size(110, 32);
-            this.btnSalesReport.Text = "Sales Report";
-            this.btnSalesReport.UseVisualStyleBackColor = true;
-            this.btnSalesReport.Click += new System.EventHandler(this.btnSalesReport_Click);
-            //
             // btnPlaceOrder
             //
             this.btnPlaceOrder.Location = new System.Drawing.Point(640, 295);
@@ -143,7 +132,6 @@ namespace ECommerceApp
             this.Controls.Add(this.dgvData);
             this.Controls.Add(this.btnLogout);
             this.Controls.Add(this.btnPlaceOrder);
-            this.Controls.Add(this.btnSalesReport);
             this.Controls.Add(this.btnView);
             this.Controls.Add(this.btnUpdate);
             this.Controls.Add(this.btnDelete);

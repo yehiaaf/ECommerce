@@ -148,9 +148,7 @@ namespace ECommerceApp
             {
                 MessageBox.Show(
                     "Order #" + newOrderId + " placed successfully!\n" +
-                    linesAdded + " product line(s) added.\n\n" +
-                    "Stock was validated, decremented, and the order total\n" +
-                    "was recomputed atomically by the stored procedure.",
+                    linesAdded + " product line(s) added.",
                     "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
